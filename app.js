@@ -1,7 +1,22 @@
-const http = require('http');
+const path = require('path');
 
-const { handler } = require('./routes');
+const express = require('express');
+const bodyParser = require('body-parser');
 
-const server = http.createServer(handler);
+const shopRoutes = require('./routes/shop');
+const adminRoutes = require('./routes/admin');
+const the404Routers = require('./routes/404');
 
-server.listen(3000);
+const app = express();
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(shopRoutes);
+app.use('/admin', adminRoutes);
+app.use(the404Routers);
+
+const port = 3000;
+
+console.log(`<-> Listening on port: ${port}`);
+app.listen(port);
