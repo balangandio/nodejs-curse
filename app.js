@@ -9,11 +9,13 @@ const the404Routers = require('./routes/404');
 
 const app = express();
 
+app.set('view engine', 'ejs');
+
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(shopRoutes);
-app.use('/admin', adminRoutes);
+app.use('/admin', adminRoutes.router);
 app.use(the404Routers);
 
 const port = 3000;
