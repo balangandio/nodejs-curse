@@ -305,4 +305,4 @@ de partials. Em um arquivo `views/includes/head.ejs` podemos ter:
 </html>
 ```
 * `include('includes/head.ejs')` realiza a inclusão do partial definindo a localização do arquivo.
-* A síntaxe `<%-` sinaliza que o conteúdo não deve sofre code escape (diferentemente de ``<%=`).
+* A síntaxe `<%-` sinaliza que o conteúdo não deve sofre code escape (diferentemente de `<%=`).
