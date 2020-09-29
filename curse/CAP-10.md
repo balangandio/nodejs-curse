@@ -1,4 +1,4 @@
-# Cap 9
+# Cap 10
 
 # 133 NoSQL Introduction
 --> Os dados no NoSQL são organizados também em Databases.
@@ -55,7 +55,8 @@ db.end();
 ```
 
 # 138 Retrieving Data
---> O retorno de `db.execute()` é uma promise para o array contendo as linhas da tabela consultada, e um array contendo o metadata da tabela:
+--> O retorno de `db.execute()` é uma promise para o array contendo as linhas da tabela consultada, e 
+um array contendo o metadata da tabela:
 ```javascript
 const db = require('./util/database');
 
@@ -66,7 +67,8 @@ db.execute('SELECT * FROM products')
 ```
 
 # 141 Inserting Data Into the Database
---> A inserção com `db.execute()` pode ser feita informando o array de dados como segundo parâmetro para a função:
+--> A inserção com `db.execute()` pode ser feita informando o array de dados como segundo parâmetro 
+para a função:
 ```javascript
 const db = require('./util/database');
 
