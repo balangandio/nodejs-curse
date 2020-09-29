@@ -7,7 +7,7 @@ exports.getProducts = (req, res, next) => {
         res.render('shop/product-list', {
             prods: products, pageTitle: 'All Products', path: '/products'
         });
-    });
+    }).catch(err => console.log(err));
 };
 
 exports.getProduct = (req, res, next) => {
@@ -19,7 +19,7 @@ exports.getProduct = (req, res, next) => {
             pageTitle: 'Detail',
             path: '/products'
         });
-    });
+    }).catch(err => console.log(err));
 };
 
 exports.getIndex = (req, res, next) => {
@@ -27,7 +27,7 @@ exports.getIndex = (req, res, next) => {
         res.render('shop/index', {
             prods: products, pageTitle: 'Shop', path: '/'
         });
-    });
+    }).catch(err => console.log(err));
 };
 
 exports.getCart = (req, res, next) => {
@@ -60,9 +60,9 @@ exports.postCart = (req, res, next) => {
 
     Product.findById(prodId).then(product => {
         Cart.addProduct(product.id, product.price);
-    });
 
-    res.redirect('/cart');
+        res.redirect('/cart');
+    }).catch(err => console.log(err));
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
@@ -72,7 +72,7 @@ exports.postCartDeleteProduct = (req, res, next) => {
         Cart.deleteProduct(product.id, product.price);
 
         res.redirect('/cart');
-    });
+    }).catch(err => console.log(err));
 };
 
 exports.getCheckout = (req, res, next) => {
