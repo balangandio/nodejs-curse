@@ -2,8 +2,8 @@ const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
-const { mongoConnect } = require('./util/database');
 const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
 const the404Routers = require('./routes/404');
@@ -18,7 +18,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use((req, res, next) => {
-    User.findById('5f74d18fc2da63000c7d6939')
+    User.findOne()
         .then(user => {
             req.user = user;
             next();
@@ -32,7 +32,22 @@ app.use(the404Routers);
 
 const port = 3000;
 
-mongoConnect(() => {
-    console.log(`<-> Listening on port: ${port}`);
-    app.listen(port);
-});
+mongoose.connect('mongodb://node-curse-app:node-curse-pass@192.168.168.1/node-complete?retryWrites=true')
+    .then(() => {
+        return User.findOne().then(user => {
+            if (!user) {
+                user = new User({
+                    name: 'Human',
+                    email: 'asd@asd.asd',
+                    cart: { items: [] }
+                });
+
+                return user.save();
+            }
+
+            return user;
+        });
+    }).then(() => {
+        console.log(`<-> Listening on port: ${port}`);
+        app.listen(port);
+    }).catch(console.log);
