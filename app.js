@@ -3,22 +3,35 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
 
 const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
-const the404Routers = require('./routes/404');
+const the404Routes = require('./routes/404');
+const authRoutes = require('./routes/auth');
 const User = require('./models/user');
 
+const MONGODB_URI = 'mongodb://node-curse-app:node-curse-pass@192.168.168.1/node-complete';
+
 const app = express();
+const store = new MongoDBStore({
+    uri: MONGODB_URI,
+    collection: 'sessions'
+});
 
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false, store }));
 
 
 app.use((req, res, next) => {
-    User.findOne()
+    if (!req.session.user) {
+        return next();
+    }
+    User.findById(req.session.user._id)
         .then(user => {
             req.user = user;
             next();
@@ -28,11 +41,12 @@ app.use((req, res, next) => {
 
 app.use(shopRoutes);
 app.use('/admin', adminRoutes.router);
-app.use(the404Routers);
+app.use(authRoutes.router);
+app.use(the404Routes);
 
 const port = 3000;
 
-mongoose.connect('mongodb://node-curse-app:node-curse-pass@192.168.168.1/node-complete?retryWrites=true')
+mongoose.connect(MONGODB_URI)
     .then(() => {
         return User.findOne().then(user => {
             if (!user) {
