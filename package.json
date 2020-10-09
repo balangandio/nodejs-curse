@@ -31,6 +31,7 @@
     "express-session": "^1.17.1",
     "mongodb": "^3.6.2",
     "mongoose": "^5.10.7",
-    "mysql2": "^2.2.5"
+    "mysql2": "^2.2.5",
+    "nodemailer": "^6.4.13"
   }
 }

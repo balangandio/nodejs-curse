@@ -1,10 +1,24 @@
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 
 const User = require('../models/user');
 
 
 const createPasswordHash = (password) => {
     return bcrypt.hash(password, 12);
+};
+
+const sendEmail = (subject, body, to) => {
+    let transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: { user: 'username@gmail.com', pass: 'password' },
+    });
+
+    return transporter.sendMail({
+        from: '"NodeJS Curse App" <username@gmail.com>', to, subject, text: body
+    });
 };
 
 exports.getLogin = (req, res, next) => {
@@ -57,7 +71,10 @@ exports.postSignup = (req, res, next) => {
 
             return createPasswordHash(password)
                 .then(password => new User({ name, email, password, cart: { items: [] } }).save())
-                .then(() => res.redirect('/login'));
+                .then(() => {
+                    res.redirect('/login');
+                    //return sendEmail('Signup', 'Your account has be created', email);
+                });
         }).catch(console.log);
 };
 
