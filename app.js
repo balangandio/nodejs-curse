@@ -10,7 +10,7 @@ const flash = require('connect-flash');
 
 const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
-const the404Routes = require('./routes/404');
+const errorsRoutes = require('./routes/errors');
 const authRoutes = require('./routes/auth');
 const User = require('./models/user');
 
@@ -37,9 +37,12 @@ app.use((req, res, next) => {
     }
     User.findById(req.session.user._id)
         .then(user => {
+            if (!user) {
+                return next();
+            }
             req.user = user;
             next();
-        }).catch(console.log);
+        }).catch(err => { throw new Error(err); });
 });
 
 app.use((req, res, next) => {
@@ -52,7 +55,16 @@ app.use((req, res, next) => {
 app.use(shopRoutes);
 app.use('/admin', adminRoutes.router);
 app.use(authRoutes.router);
-app.use(the404Routes);
+app.use(errorsRoutes);
+
+app.use((error, req, res, next) => {
+    res.status(500).render('500', { 
+        pageTitle: 'An Error Occurred',
+        path: '/500',
+        isAuthenticated: req.session.isLoggedIn,
+        error
+    });
+});
 
 const port = 3000;
 
