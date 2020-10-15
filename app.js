@@ -2,12 +2,14 @@ const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const multer = require('multer');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
 
+const { parseUploadedFileName } = require('./util/path');
 const shopRoutes = require('./routes/shop');
 const adminRoutes = require('./routes/admin');
 const errorsRoutes = require('./routes/errors');
@@ -23,10 +25,23 @@ const store = new MongoDBStore({
 });
 const csrfProtection = csrf();
 
+const fileStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploaded-images'),
+    filename: (req, file, cb) => cb(null, parseUploadedFileName(file.originalname))
+});
+
+const fileFilter = (req, file, cb) => {
+    const acceptedOnes = ['image/png', 'image/jpg', 'image/jpeg']
+    const isAccepted = acceptedOnes.indexOf(file.mimetype) !== -1;
+    cb(null, isAccepted);
+};
+
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: false}));
+app.use(multer({ storage: fileStorage, fileFilter }).single('image'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'uploaded-images')));
 app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false, store }));
 app.use(csrfProtection);
 app.use(flash());
@@ -58,10 +73,11 @@ app.use(authRoutes.router);
 app.use(errorsRoutes);
 
 app.use((error, req, res, next) => {
+    console.log(error);
     res.status(500).render('500', { 
         pageTitle: 'An Error Occurred',
         path: '/500',
-        isAuthenticated: req.session.isLoggedIn,
+        isAuthenticated: req.session ? req.session.isLoggedIn : false,
         error
     });
 });

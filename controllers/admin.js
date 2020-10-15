@@ -1,6 +1,9 @@
+const path = require('path');
+
 const { ObjectId } = require('mongodb');
 const { validationResult } = require('express-validator/check');
 
+const { deleteFile } = require('../util/file');
 const Product = require('../models/product');
 const { defaultImage } = require('../models/default');
 
@@ -43,9 +46,10 @@ exports.postEditProduct = (req, res, next) => {
         productId,
         title,
         price,
-        imageUrl,
         description
     } = req.body;
+
+    const image = req.file;
 
     const errors = validationResult(req);
 
@@ -56,12 +60,16 @@ exports.postEditProduct = (req, res, next) => {
             }
 
             if (!errors.isEmpty()) {
+                if (image) {
+                    deleteFile(image.path);
+                }
+
                 return res.status(422).render('admin/edit-product', {
                     path: '/admin/edit-product',
                     pageTitle: 'Edit Product',
                     errorMessage: errors.array()[0].msg,
                     validationErrors: errors.array(),
-                    product: { _id: productId, title, price, imageUrl, description },
+                    product: { _id: productId, title, price, description },
                     hasErrors: true,
                     editing: true
                 });
@@ -69,7 +77,10 @@ exports.postEditProduct = (req, res, next) => {
 
             product.title = title;
             product.price = price;
-            product.imageUrl = imageUrl;
+            if (image) {
+                deleteFile(path.join('uploaded-images', product.imageUrl));
+                product.imageUrl = image.filename;
+            }
             product.description = description;
 
             return product.save().then(() => {
@@ -79,27 +90,28 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = (req, res, next) => {
-    let { title, description, price, imageUrl } = req.body;
-
-    if (!imageUrl) {
-        imageUrl = defaultImage;
-    }
+    const { title, description, price } = req.body;
+    let image = req.file ? req.file.filename : defaultImage;
 
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
+        if (req.file) {
+            deleteFile(req.file.path);
+        }
+
         return res.status(422).render('admin/edit-product', {
             path: '/admin/edit-product',
             pageTitle: 'Add Product',
             errorMessage: errors.array()[0].msg,
             validationErrors: errors.array(),
-            product: { title, description, price, imageUrl: imageUrl !== defaultImage ? imageUrl : '' },
+            product: { title, description, price },
             editing: false,
             hasErrors: true
         });
     }
 
-    const product = new Product({ title, price, description, imageUrl, userId: req.user });
+    const product = new Product({ title, price, description, imageUrl: image, userId: req.user });
 
     product.save().then(() => {
         res.redirect('/');
@@ -118,7 +130,16 @@ exports.getProducts = (req, res, next) => {
 exports.postDeleteProduct = (req, res, next) => {
     const { productId } = req.body;
 
-    Product.deleteOne({ _id: new ObjectId(productId), userId: req.user._id })
-        .then(() => res.redirect('/admin/products'))
-        .catch(err => next(new Error(err)));
+    Product.findById(productId)
+        .then(product => {
+            if (!product) {
+                return next(new Error('Product not found!'));
+            }
+
+            return Product.deleteOne({ _id: new ObjectId(productId), userId: req.user._id })
+                .then(() => {
+                    deleteFile(path.join('uploaded-images', product.imageUrl));
+                    res.redirect('/admin/products');
+                });
+        }).catch(err => next(new Error(err)));
 };

@@ -1,3 +1,7 @@
+const fs = require('fs');
+const path = require('path');
+const PDFDocument = require('pdfkit');
+
 const Product = require('../models/product');
 const Order = require('../models/order');
 
@@ -109,4 +113,41 @@ exports.postOrder = (req, res, next) => {
         .then(() => {
             res.redirect('/orders');
         }).catch(err => next(new Error(err)));
+};
+
+exports.getInvoice = (req, res, next) => {
+    const { orderId } = req.params;
+
+    Order.findById(orderId).then(order => {
+        if (!order) {
+            return next(new Error('No order found!'));
+        }
+
+        if (order.user.userId.toString() !== req.user._id.toString()) {
+            return next(new Error('Not allowed!'));
+        }
+
+        const invoiceName = `invoice-${orderId}.pdf`;
+
+        const pdfDoc = new PDFDocument();
+        pdfDoc.pipe(res);
+        
+        pdfDoc.fontSize(26).text('Invoice', { underline: true });
+        pdfDoc.text('-----------------------');
+
+        let totalPrice = 0;
+        order.products.forEach(prod => {
+            totalPrice += prod.quantity * prod.product.price;
+            pdfDoc.fontSize(14).text(
+                `${prod.product.title} - ${prod.quantity} x $${prod.product.price}`
+            );
+        });
+        
+        pdfDoc.text('---');
+        pdfDoc.fontSize(20).text('Total Price: $' + totalPrice);
+    
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${invoiceName}"`);
+        pdfDoc.end();
+    }).catch(next);
 };
