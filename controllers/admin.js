@@ -1,11 +1,18 @@
 const path = require('path');
 
 const { ObjectId } = require('mongodb');
-const { validationResult } = require('express-validator/check');
+const { validationResult } = require('express-validator');
 
 const { deleteFile } = require('../util/file');
 const Product = require('../models/product');
 const { defaultImage } = require('../models/default');
+
+
+const deleteProductImageFile = (imageUrl) => {
+    if (filePath.indexOf('data:image') !== 0) {
+        deleteFile(path.join('uploaded-images', imageUrl));
+    }
+};
 
 
 exports.getAddProduct = (req, res, next) => {
@@ -78,7 +85,7 @@ exports.postEditProduct = (req, res, next) => {
             product.title = title;
             product.price = price;
             if (image) {
-                deleteFile(path.join('uploaded-images', product.imageUrl));
+                deleteProductImageFile(product.imageUrl);
                 product.imageUrl = image.filename;
             }
             product.description = description;
@@ -127,8 +134,8 @@ exports.getProducts = (req, res, next) => {
         }).catch(err => next(new Error(err)));
 };
 
-exports.postDeleteProduct = (req, res, next) => {
-    const { productId } = req.body;
+exports.deleteProduct = (req, res, next) => {
+    const { productId } = req.params;
 
     Product.findById(productId)
         .then(product => {
@@ -138,8 +145,9 @@ exports.postDeleteProduct = (req, res, next) => {
 
             return Product.deleteOne({ _id: new ObjectId(productId), userId: req.user._id })
                 .then(() => {
-                    deleteFile(path.join('uploaded-images', product.imageUrl));
-                    res.redirect('/admin/products');
+                    deleteProductImageFile(product.imageUrl);
+                    
+                    res.status(200).json({ message: 'Success!' });
                 });
-        }).catch(err => next(new Error(err)));
+        }).catch(err => res.status(500).json({ message: 'Deletion failed!' }));
 };

@@ -1,17 +1,37 @@
 const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
+const stripe  = require('stripe')('pk_test_i6b537msoXqRsJFwQwCm9tR1');
 
 const Product = require('../models/product');
 const Order = require('../models/order');
 
+const ITEMS_PER_PAGE = 2;
+
 
 exports.getProducts = (req, res, next) => {
-    Product.find().then(products => {
-        res.render('shop/product-list', {
-            prods: products, pageTitle: 'All Products', path: '/products'
-        });
-    }).catch(err => next(new Error(err)));
+    const page = req.query.page ? Number(req.query.page) : 1;
+
+    Product.collection
+        .countDocuments()
+        .then(total => {
+            return Product.find()
+                .skip((page - 1) * ITEMS_PER_PAGE)
+                .limit(ITEMS_PER_PAGE)
+                .then(products => { return { products, total }; });
+        }).then(({ products, total }) => {
+            res.render('shop/product-list', {
+                prods: products,
+                pageTitle: 'All Products',
+                path: '/products',
+                currentPage: page,
+                hasNextPage: ITEMS_PER_PAGE * page < total,
+                hasPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(total / ITEMS_PER_PAGE)
+            });
+        }).catch(err => next(new Error(err)));
 };
 
 exports.getProduct = (req, res, next) => {
@@ -28,13 +48,28 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-    Product.find().then(products => {
-        res.render('shop/index', {
-            prods: products,
-            pageTitle: 'Shop',
-            path: '/'
-        });
-    }).catch(err => next(new Error(err)));
+    const page = req.query.page ? Number(req.query.page) : 1;
+
+    Product.collection
+        .countDocuments()
+        .then(total => {
+            return Product.find()
+                .skip((page - 1) * ITEMS_PER_PAGE)
+                .limit(ITEMS_PER_PAGE)
+                .then(products => { return { products, total }; });
+        }).then(({ products, total }) => {
+            res.render('shop/index', {
+                prods: products,
+                pageTitle: 'Shop',
+                path: '/',
+                currentPage: page,
+                hasNextPage: ITEMS_PER_PAGE * page < total,
+                hasPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(total / ITEMS_PER_PAGE)
+            });
+        }).catch(err => next(new Error(err)));
 };
 
 exports.getCart = (req, res, next) => {
@@ -73,9 +108,22 @@ exports.postCartDeleteProduct = (req, res, next) => {
 };
 
 exports.getCheckout = (req, res, next) => {
-    res.render('shop/checkout', {
-        pageTitle: 'Checkout', path: '/checkout'
-    });
+    req.user
+        .populate('cart.items.productId')
+        .execPopulate()
+        .then(user => {
+            const products = user.cart.items;
+            const totalSum = products.reduce((sum, p) => {
+                return sum + (p.quantity * p.productId.price);
+            }, 0);
+
+            res.render('shop/checkout', {
+                pageTitle: 'Checkout',
+                path: '/checkout',
+                products,
+                totalSum
+            });
+        }).catch(err => next(new Error(err)));
 };
 
 exports.getOrders = (req, res, next) => {
@@ -91,6 +139,18 @@ exports.getOrders = (req, res, next) => {
 };
 
 exports.postOrder = (req, res, next) => {
+    const { stripeToken } = req.body;
+
+    const createCharge = (totalSum, token, orderId) => {
+        return stripe.charges.create({
+            amount: totalSum * 100,
+            currency: 'usd',
+            description: 'Demo Order',
+            source: token,
+            metadata: { order_id: orderId }
+        });
+    };
+
     req.user
         .populate('cart.items.productId')
         .execPopulate()
@@ -100,7 +160,11 @@ exports.postOrder = (req, res, next) => {
                 return { quantity: item.quantity, product: { ...item.productId._doc } };
             });
 
-            const order = new Order({
+            const totalSum = products.reduce((sum, p) => {
+                return sum + (p.quantity * p.product.price)
+            }, 0);
+
+            const newOrder = new Order({
                 user: {
                     email: req.user.email,
                     userId: req.user
@@ -108,9 +172,12 @@ exports.postOrder = (req, res, next) => {
                 products
             });
 
-            return order.save();
-        }).then(() => req.user.clearCart())
-        .then(() => {
+            return newOrder.save().then(order => { return { totalSum, order }; });
+        }).then(({ totalSum, order }) => {
+            req.user.clearCart();
+
+            //const charge = createCharge(totalSum, stripeToken, order._id.toString());
+        }).then(() => {
             res.redirect('/orders');
         }).catch(err => next(new Error(err)));
 };

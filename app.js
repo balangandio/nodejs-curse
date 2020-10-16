@@ -15,6 +15,8 @@ const adminRoutes = require('./routes/admin');
 const errorsRoutes = require('./routes/errors');
 const authRoutes = require('./routes/auth');
 const User = require('./models/user');
+const shopCtrl = require('./controllers/shop');
+const isAuth = require('./middleware/is-auth');
 
 const MONGODB_URI = 'mongodb://node-curse-app:node-curse-pass@192.168.168.1/node-complete';
 
@@ -43,7 +45,6 @@ app.use(multer({ storage: fileStorage, fileFilter }).single('image'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, 'uploaded-images')));
 app.use(session({ secret: 'my secret', resave: false, saveUninitialized: false, store }));
-app.use(csrfProtection);
 app.use(flash());
 
 app.use((req, res, next) => {
@@ -62,10 +63,17 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
     res.locals.isAuthenticated = req.session.isLoggedIn;
-    res.locals.csrfToken = req.csrfToken();
     next();
 });
 
+app.post('/create-order', isAuth, shopCtrl.postOrder);
+
+app.use(csrfProtection);
+
+app.use((req, res, next) => {
+    res.locals.csrfToken = req.csrfToken();
+    next();
+});
 
 app.use(shopRoutes);
 app.use('/admin', adminRoutes.router);
@@ -84,7 +92,7 @@ app.use((error, req, res, next) => {
 
 const port = 3000;
 
-mongoose.connect(MONGODB_URI)
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         console.log(`<-> Listening on port: ${port}`);
         app.listen(port);

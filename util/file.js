@@ -5,5 +5,5 @@ exports.deleteFile = (filePath) => {
         if (err) {
             throw err;
         }
-    })
+    });
 };
