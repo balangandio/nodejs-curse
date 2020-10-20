@@ -16,29 +16,28 @@ const deleteImageFile = (imageUrl) => {
 };
 
 
-exports.getPosts = (req, res, next) => {
+exports.getPosts = async (req, res, next) => {
     const currentPage = req.query.page || 1;
     const perPage = 2;
 
-    Post.collection.countDocuments().then(total => {
-        return Post.find()
+    try {
+        const total = await Post.collection.countDocuments();
+
+        const posts = await Post.find()
             .skip((currentPage - 1) * perPage)
-            .limit(perPage)
-            .then(posts => {
-                return { posts, total };
-            });
-    }).then(({posts, total}) => {
+            .limit(perPage);
+    
         res.status(200).json({
             message: 'Posts retrived',
             posts,
             totalItems: total
         });
-    }).catch(err => {
+    } catch(err) {
         if (!err.statusCode) {
             err.statusCode = 500;
         }
         next(err);
-    });
+    };
 };
 
 exports.postPost = (req, res, next) => {
