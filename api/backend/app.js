@@ -50,5 +50,11 @@ const port = 8080;
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         console.log(`<-> Listening on port: ${port}`);
-        app.listen(port);
+        const server = app.listen(port);
+
+        const io = require('./socket').init(server);
+
+        io.on('connection', socket => {
+            console.log('<-> websocket client connected');
+        });
     }).catch(console.log);
