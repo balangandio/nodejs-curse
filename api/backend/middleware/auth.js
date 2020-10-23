@@ -7,10 +7,10 @@ exports.SERVER_JWT_TOKEN_KEY = SERVER_JWT_TOKEN_KEY;
 
 exports.isAuth = (req, res, next) => {
     const authHeader = req.get('Authorization');
+
     if (!authHeader) {
-        const err = new Error('Not authenticated!');
-        err.statusCode = 401;
-        throw err;
+        req.isAuth = false;
+        return next();
     }
 
     const token = authHeader.split(' ')[1];
@@ -18,16 +18,16 @@ exports.isAuth = (req, res, next) => {
     try {
         decodedToken = jwt.verify(token, SERVER_JWT_TOKEN_KEY);
     } catch(err) {
-        err.statusCode = 500;
-        throw err;
+        req.isAuth = false;
+        return next();
     }
 
     if (!decodedToken) {
-        const err = new Error('Not authenticated!');
-        err.statusCode = 401;
-        throw err;
+        req.isAuth = false;
+        return next();
     }
 
     req.userId = decodedToken.userId;
+    req.isAuth = true;
     next();
 };

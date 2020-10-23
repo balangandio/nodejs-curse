@@ -4,11 +4,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { graphqlHTTP } = require('express-graphql');
 
-const feedRoutes = require('./routes/feed');
-const authRoutes = require('./routes/auth');
 const { configureCORS } = require('./middleware/cors');
+const { isAuth } = require('./middleware/auth');
+const { putImage } = require('./middleware/image-upload');
 const { parseUploadedFileName } = require('./util/path');
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolvers = require('./graphql/resolvers');
 
 const MONGODB_URI = 'mongodb://node-curse-app:node-curse-pass@192.168.168.1/node-complete-api';
 
@@ -30,9 +33,28 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(multer({ storage: fileStorage, fileFilter }).single('image'));
 
 app.use(configureCORS);
+app.use(isAuth);
 
-app.use('/feed', feedRoutes);
-app.use('/auth', authRoutes);
+app.put('/post-image', putImage);
+
+app.use('/graphql', (req, res, next) => {
+    return req.method === 'OPTIONS' ? res.sendStatus(200) : next();
+});
+
+app.use('/graphql', graphqlHTTP({
+    schema: graphqlSchema,
+    rootValue: graphqlResolvers,
+    graphiql: true,
+    customFormatErrorFn(err) {
+        if (!err.originalError) {
+            return err;
+        }
+
+        const { message, data, code } = err.originalError;
+
+        return { message: message || 'An error occurred', status: code, data };
+    } 
+}));
 
 app.use((error, req, res, next) => {
     if (error.statusCode !== 401) {
@@ -50,11 +72,5 @@ const port = 8080;
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         console.log(`<-> Listening on port: ${port}`);
-        const server = app.listen(port);
-
-        const io = require('./socket').init(server);
-
-        io.on('connection', socket => {
-            console.log('<-> websocket client connected');
-        });
+        app.listen(port);
     }).catch(console.log);
