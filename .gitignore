@@ -3,3 +3,4 @@ uploaded-images
 api/backend/node_modules
 api/backend/images
 api/frontend/node_modules
+access.log

@@ -1,0 +1,9 @@
+{
+    "env": {
+        "APP_PORT": "3000",
+        "MONGO_DB_USER": "node-curse-app",
+        "MONGO_DB_PASS": "node-curse-pass",
+        "MONGO_DB_HOST": "192.168.168.1",
+        "MONGO_DB_BASE": "node-complete"
+    }
+}

@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -8,6 +9,9 @@ const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
 
 const { parseUploadedFileName } = require('./util/path');
 const shopRoutes = require('./routes/shop');
@@ -18,7 +22,7 @@ const User = require('./models/user');
 const shopCtrl = require('./controllers/shop');
 const isAuth = require('./middleware/is-auth');
 
-const MONGODB_URI = 'mongodb://node-curse-app:node-curse-pass@192.168.168.1/node-complete';
+const MONGODB_URI = `mongodb://${process.env.MONGO_DB_USER}:${process.env.MONGO_DB_PASS}@${process.env.MONGO_DB_HOST}/${process.env.MONGO_DB_BASE}`;
 
 const app = express();
 const store = new MongoDBStore({
@@ -38,8 +42,17 @@ const fileFilter = (req, file, cb) => {
     cb(null, isAccepted);
 };
 
+const acessLogStream = fs.createWriteStream(
+    path.join(__dirname, 'access.log'),
+    { flags: 'a' }
+);
+
 app.set('view engine', 'ejs');
 
+
+app.use(morgan('combined', { stream: acessLogStream }));
+app.use(helmet());
+app.use(compression());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(multer({ storage: fileStorage, fileFilter }).single('image'));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -90,7 +103,7 @@ app.use((error, req, res, next) => {
     });
 });
 
-const port = 3000;
+const port = Number(process.env.APP_PORT);
 
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
