@@ -1,4 +1,4 @@
-# Cap 14
+# Cap 14 - Sessions - Cookies
 
 # 230 Setting a Cookie
 --> Cookies podem ser definidos no objeto `res` com `setHeader('Set-Cookie')`:

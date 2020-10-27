@@ -1,4 +1,4 @@
-# Cap 19
+# Cap 19 - Error Handling
 
 # 306 Using the Express.js Error Handling Middleware
 --> Express.js permite registrar um tipo específico de middleware responsável por tratar objetos `Error`:

@@ -1,4 +1,4 @@
-# Cap 15
+# Cap 15 - Adding Authentication
 
 # 250 Encrypting Passwords
 --> `bcryptjs` é um pacote que fornece utilitários para criptografia de valores, como passwords.

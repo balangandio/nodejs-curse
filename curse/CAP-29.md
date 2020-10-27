@@ -1,4 +1,4 @@
-# Cap 29
+# Cap 29 - Deploying our App
 
 # 442 Deployment Preparations
 --> O lançamento de uma aplicação Node em ambiente de produção independe da arquitetura lógica utilizada. 

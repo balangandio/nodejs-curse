@@ -1,4 +1,4 @@
-# Cap 2
+# Cap 2 - Optional JavaScript - A Quick Refresher
 
 # 018 Destructuring
 --> Elementos de um array podem ser atribuídos diretamente a variáveis através do destructuring:

@@ -1,4 +1,4 @@
-# Cap 10
+# Cap 10 - SQL Introduction
 
 # 133 NoSQL Introduction
 --> Os dados no NoSQL são organizados também em Databases.

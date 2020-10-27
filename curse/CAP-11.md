@@ -1,4 +1,4 @@
-# Cap 11
+# Cap 11 - Understanding Sequelize
 
 # 146 What is Sequelize
 --> Sequelize é um módulo ORM (Object-relational mapping) que permite trabalhar com bases SQL de 

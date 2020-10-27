@@ -1,4 +1,4 @@
-# Cap 21
+# Cap 21 - Adding Pagination
 
 # 334 Retrieving a Chunk of Data
 --> Mongoose oferece as funções `skip()` e `limit()` utilizadas para restringir quais objetos objetos em 

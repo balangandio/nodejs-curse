@@ -1,4 +1,4 @@
-# Cap 23
+# Cap 23 - Adding Payments
 
 # 349 How Payments Work
 --> A implementação de etapas de pagamento em uma aplicação é uma tarefa complexa. Usualmente são 

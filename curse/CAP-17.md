@@ -1,4 +1,4 @@
-# Cap 17
+# Cap 17 - Advanced Authentication
 
 # 273 Implementing the Token Logic
 --> `crypto` é um core module do Node que permite gerar valores randômicos:

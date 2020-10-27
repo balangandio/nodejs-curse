@@ -1,4 +1,4 @@
-# Cap 6
+# Cap 6 - Working with Dynamic Content - Adding Templating Engines
 
 # 077 Sharing Data Across Requests - Users
 --> Quando armazenamos valores proveniente de requisições em uma variável ou estrutura de dados, 

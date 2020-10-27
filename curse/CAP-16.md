@@ -1,4 +1,4 @@
-# Cap 16
+# Cap 16 - Sending Emails
 
 # 267 Using SendGrid
 --> `nodemailer` é um pacote que implementa um cliente para envio de e-mails.

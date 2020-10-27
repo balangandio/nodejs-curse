@@ -1,4 +1,4 @@
-# Cap 4
+# Cap 4 - Improved Development Workflow and Debugging
 
 # 041 Understanding NPM Scripts
 --> Npm é uma ferramenta paralela a plataforma Node que permite gerenciar módulos, que não 

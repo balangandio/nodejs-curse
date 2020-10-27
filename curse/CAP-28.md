@@ -1,4 +1,4 @@
-# Cap 28
+# Cap 28 - Working with GraphQL
 
 # 413 What is GraphQL
 --> GraphQL é uma solução para uma das problemáticas geradas quando uma REST API cresce sobe a demanda de 
